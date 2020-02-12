@@ -37,6 +37,7 @@ class VideoPlayerValue {
     this.isPlaying = false,
     this.isLooping = false,
     this.isBuffering = false,
+    this.isBackgroundAllowed,
     this.volume = 1.0,
     this.errorDescription,
   });
@@ -56,6 +57,9 @@ class VideoPlayerValue {
 
   /// The current playback position.
   final Duration position;
+
+  /// Declares background playback is allowed
+  final bool isBackgroundAllowed;
 
   /// The [Caption] that should be displayed based on the current [position].
   ///
@@ -119,6 +123,7 @@ class VideoPlayerValue {
     bool isPlaying,
     bool isLooping,
     bool isBuffering,
+    bool isBackgroundAllowed,
     double volume,
     String errorDescription,
   }) {
@@ -131,6 +136,7 @@ class VideoPlayerValue {
       isPlaying: isPlaying ?? this.isPlaying,
       isLooping: isLooping ?? this.isLooping,
       isBuffering: isBuffering ?? this.isBuffering,
+      isBackgroundAllowed: isBackgroundAllowed ?? this.isBackgroundAllowed,
       volume: volume ?? this.volume,
       errorDescription: errorDescription ?? this.errorDescription,
     );
@@ -356,6 +362,13 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
     await _applyLooping();
   }
 
+  /// Sets whether or not the video should loop after playing once. See also
+  /// [VideoPlayerValue.isLooping].
+  Future<void> setBackground(bool isBackgroundAllowed) async {
+    value = value.copyWith(isBackgroundAllowed: isBackgroundAllowed);
+    await _applyLooping();
+  }
+
   /// Pauses the video.
   Future<void> pause() async {
     value = value.copyWith(isPlaying: false);
@@ -377,7 +390,7 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
       await _videoPlayerPlatform.play(_textureId);
       _timer = Timer.periodic(
         const Duration(milliseconds: 500),
-            (Timer timer) async {
+        (Timer timer) async {
           if (_isDisposed) {
             return;
           }
@@ -488,21 +501,23 @@ class _VideoAppLifeCycleObserver extends Object with WidgetsBindingObserver {
         }
         break;
       case AppLifecycleState.resumed:
-        _onEnterForeground ();
+        _onEnterForeground;
         break;
       default:
     }
   }
 
-  void _onEnterForeground() {
-    if (_wasPlayingBeforePause) {
+  void _onEnterForeground(VideoPlayerValue value) {
+    if (_wasPlayingBeforePause && !_controller.value.isBackgroundAllowed) {
       _controller.play();
     }
   }
 
   void _onEnterBackground() {
-    _wasPlayingBeforePause = _controller.value.isPlaying;
-    _controller.pause();
+    if (!_controller.value.isBackgroundAllowed) {
+      _wasPlayingBeforePause = _controller.value.isPlaying;
+      _controller.pause();
+    }
   }
 
   void dispose() {
@@ -684,7 +699,8 @@ class VideoProgressIndicator extends StatefulWidget {
   /// Defaults will be used for everything except [controller] if they're not
   /// provided. [allowScrubbing] defaults to false, and [padding] will default
   /// to `top: 5.0`.
-  VideoProgressIndicator(this.controller, {
+  VideoProgressIndicator(
+    this.controller, {
     VideoProgressColors colors,
     this.allowScrubbing,
     this.padding = const EdgeInsets.only(top: 5.0),
@@ -833,13 +849,10 @@ class ClosedCaption extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final TextStyle effectiveTextStyle = textStyle ??
-        DefaultTextStyle
-            .of(context)
-            .style
-            .copyWith(
-          fontSize: 36.0,
-          color: Colors.white,
-        );
+        DefaultTextStyle.of(context).style.copyWith(
+              fontSize: 36.0,
+              color: Colors.white,
+            );
 
     if (text == null) {
       return SizedBox.shrink();
