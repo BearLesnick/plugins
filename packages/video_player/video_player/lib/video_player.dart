@@ -501,14 +501,16 @@ class _VideoAppLifeCycleObserver extends Object with WidgetsBindingObserver {
         }
         break;
       case AppLifecycleState.resumed:
-        _onEnterForeground;
+        if (!_controller.value.isBackgroundAllowed) {
+          _onEnterForeground();
+        }
         break;
       default:
     }
   }
 
-  void _onEnterForeground(VideoPlayerValue value) {
-    if (_wasPlayingBeforePause && !_controller.value.isBackgroundAllowed) {
+  void _onEnterForeground() {
+    if (_wasPlayingBeforePause) {
       _controller.play();
     }
   }
