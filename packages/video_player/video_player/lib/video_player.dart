@@ -351,6 +351,7 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
   /// has been sent to the platform, not when playback itself is totally
   /// finished.
   Future<void> play() async {
+    print("Play");
     value = value.copyWith(isPlaying: true);
     await _applyPlayPause();
   }
@@ -388,6 +389,7 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
       return;
     }
     if (value.isPlaying) {
+      print("Play pause on is playing");
       await _videoPlayerPlatform.play(_textureId);
       _timer = Timer.periodic(
         const Duration(milliseconds: 500),
@@ -403,6 +405,7 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
         },
       );
     } else {
+      print("Play pause on is paused");
       _timer?.cancel();
       await _videoPlayerPlatform.pause(_textureId);
     }
