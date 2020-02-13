@@ -362,15 +362,16 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
     await _applyLooping();
   }
 
-  /// Sets whether or not the video should loop after playing once. See also
-  /// [VideoPlayerValue.isLooping].
+  /// Sets whether video could be played back in background mode
+  /// [VideoPlayerValue.isBackgroundAllowed].
   Future<void> setBackground(bool isBackgroundAllowed) async {
+    print("setPackground");
     value = value.copyWith(isBackgroundAllowed: isBackgroundAllowed);
-    await _applyLooping();
   }
 
   /// Pauses the video.
   Future<void> pause() async {
+    print("Pause");
     value = value.copyWith(isPlaying: false);
     await _applyPlayPause();
   }
@@ -398,7 +399,7 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
           if (_isDisposed) {
             return;
           }
-          _updatePosition(newPosition);
+          _updatePositionOnPlayback(newPosition);
         },
       );
     } else {
@@ -429,6 +430,7 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
   /// and silently clamped.
   Future<void> seekTo(Duration position) async {
     if (_isDisposed) {
+      print("seek to is disposed");
       return;
     }
     if (position > value.duration) {
@@ -437,7 +439,7 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
       position = const Duration();
     }
     await _videoPlayerPlatform.seekTo(_textureId, position);
-    _updatePosition(position);
+    _updatePositionOnSeek(position);
   }
 
   /// Sets the audio volume of [this].
@@ -471,9 +473,16 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
     return Caption();
   }
 
-  void _updatePosition(Duration position) {
-    value = value.copyWith(position: position);
-    value = value.copyWith(caption: _getCaptionAt(position));
+  void _updatePositionOnSeek(Duration position) {
+    print("Update position on seek to $position");
+    value =
+        value.copyWith(position: position, caption: _getCaptionAt(position));
+  }
+
+  void _updatePositionOnPlayback(Duration position) {
+    print("Update position  on playback to $position");
+    value = value.copyWith(
+        position: position, caption: _getCaptionAt(position), isPlaying: true);
   }
 }
 
@@ -510,12 +519,14 @@ class _VideoAppLifeCycleObserver extends Object with WidgetsBindingObserver {
   }
 
   void _onEnterForeground() {
+    print("onEnterForeground");
     if (_wasPlayingBeforePause) {
       _controller.play();
     }
   }
 
   void _onEnterBackground() {
+    print("onEnterBackground");
     if (!_controller.value.isBackgroundAllowed) {
       _wasPlayingBeforePause = _controller.value.isPlaying;
       _controller.pause();
