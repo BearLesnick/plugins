@@ -485,7 +485,7 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
   void _updatePositionOnPlayback(Duration position) {
     print("Update position  on playback to $position");
     value = value.copyWith(
-        position: position, caption: _getCaptionAt(position), isPlaying: true);
+        position: position, caption: _getCaptionAt(position));
   }
 }
 
