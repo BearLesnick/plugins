@@ -277,7 +277,6 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
       if (_isDisposed) {
         return;
       }
-
       switch (event.eventType) {
         case VideoEventType.initialized:
           value = value.copyWith(
@@ -290,7 +289,6 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
           _applyPlayPause();
           break;
         case VideoEventType.completed:
-          print("event completed");
           value = value.copyWith(isPlaying: false, position: value.duration);
           _timer?.cancel();
           break;
@@ -352,7 +350,6 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
   /// has been sent to the platform, not when playback itself is totally
   /// finished.
   Future<void> play() async {
-    print("Play");
     value = value.copyWith(isPlaying: true);
     await _applyPlayPause();
   }
@@ -367,13 +364,11 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
   /// Sets whether video could be played back in background mode
   /// [VideoPlayerValue.isBackgroundAllowed].
   Future<void> setBackground(bool isBackgroundAllowed) async {
-    print("setPackground");
     value = value.copyWith(isBackgroundAllowed: isBackgroundAllowed);
   }
 
   /// Pauses the video.
   Future<void> pause() async {
-    print("Pause");
     value = value.copyWith(isPlaying: false);
     await _applyPlayPause();
   }
@@ -390,7 +385,6 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
       return;
     }
     if (value.isPlaying) {
-      print("Play pause on is playing");
       await _videoPlayerPlatform.play(_textureId);
       _timer = Timer.periodic(
         const Duration(milliseconds: 500),
@@ -406,7 +400,6 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
         },
       );
     } else {
-      print("Play pause on is paused");
       _timer?.cancel();
       await _videoPlayerPlatform.pause(_textureId);
     }
@@ -434,7 +427,6 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
   /// and silently clamped.
   Future<void> seekTo(Duration position) async {
     if (_isDisposed) {
-      print("seek to is disposed");
       return;
     }
     if (position > value.duration) {
@@ -478,15 +470,13 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
   }
 
   void _updatePositionOnSeek(Duration position) {
-    print("Update position on seek to $position");
     value =
         value.copyWith(position: position, caption: _getCaptionAt(position));
   }
 
   void _updatePositionOnPlayback(Duration position) {
-    print("Update position  on playback to $position");
     value = value.copyWith(
-        position: position, caption: _getCaptionAt(position));
+        position: position, caption: _getCaptionAt(position), isPlaying: true);
   }
 }
 
@@ -523,14 +513,12 @@ class _VideoAppLifeCycleObserver extends Object with WidgetsBindingObserver {
   }
 
   void _onEnterForeground() {
-    print("onEnterForeground");
     if (_wasPlayingBeforePause) {
       _controller.play();
     }
   }
 
   void _onEnterBackground() {
-    print("onEnterBackground");
     if (!_controller.value.isBackgroundAllowed) {
       _wasPlayingBeforePause = _controller.value.isPlaying;
       _controller.pause();
