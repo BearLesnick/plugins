@@ -191,9 +191,11 @@ final class VideoPlayer {
 
                     @Override
                     public void onPlayerError(final ExoPlaybackException error) {
-                        Log.d("ExoPlayer", "Error happened, error is" + error.toString());
+                        Log.d("ExoPlayer", "Error happened, error is " + error.toString());
                         if (eventSink != null) {
                             eventSink.error("VideoError", "Video player had error " + error, null);
+                        } else {
+                            Log.d("ExoPlayer", "Error happened, but event sink is null, so error event was not sent");
                         }
                     }
                 });
