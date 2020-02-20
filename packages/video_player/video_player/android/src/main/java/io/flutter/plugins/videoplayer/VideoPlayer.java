@@ -169,7 +169,6 @@ final class VideoPlayer {
         surface = new Surface(textureEntry.surfaceTexture());
         exoPlayer.setVideoSurface(surface);
         setAudioAttributes(exoPlayer);
-
         exoPlayer.addListener(
                 new EventListener() {
 
@@ -274,6 +273,7 @@ final class VideoPlayer {
     }
 
     void dispose() {
+        Log.d("ExoPlayer", "Player disposed for texture id" + textureEntry.id());
         if (isInitialized) {
             exoPlayer.stop();
         }
