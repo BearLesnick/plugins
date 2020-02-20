@@ -316,6 +316,7 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
     void errorListener(Object obj) {
       final PlatformException e = obj;
       value = VideoPlayerValue.erroneous(e.message);
+      notifyListeners();
       _timer?.cancel();
       if (!initializingCompleter.isCompleted) {
         initializingCompleter.completeError(obj);
