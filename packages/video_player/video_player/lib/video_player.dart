@@ -142,6 +142,36 @@ class VideoPlayerValue {
     );
   }
 
+  /// returns a new instance that has same values as a current one, but with
+  /// error description equals null
+  VideoPlayerValue copyCleaningError({
+    Duration duration,
+    Size size,
+    Duration position,
+    Caption caption,
+    List<DurationRange> buffered,
+    bool isPlaying,
+    bool isLooping,
+    bool isBuffering,
+    bool isBackgroundAllowed,
+    double volume,
+    String errorDescription,
+  }) {
+    return VideoPlayerValue(
+      duration: duration ?? this.duration,
+      size: size ?? this.size,
+      position: position ?? this.position,
+      caption: caption ?? this.caption,
+      buffered: buffered ?? this.buffered,
+      isPlaying: isPlaying ?? this.isPlaying,
+      isLooping: isLooping ?? this.isLooping,
+      isBuffering: isBuffering ?? this.isBuffering,
+      isBackgroundAllowed: isBackgroundAllowed ?? this.isBackgroundAllowed,
+      volume: volume ?? this.volume,
+      errorDescription: null,
+    );
+  }
+
   @override
   String toString() {
     return '$runtimeType('
@@ -279,27 +309,26 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
       }
       switch (event.eventType) {
         case VideoEventType.initialized:
-          value = value.copyWith(
-            duration: event.duration,
-            size: event.size,
-          );
+          value = value.copyCleaningError(
+              duration: event.duration, size: event.size);
           initializingCompleter.complete(null);
           _applyLooping();
           _applyVolume();
           _applyPlayPause();
           break;
         case VideoEventType.completed:
-          value = value.copyWith(isPlaying: false, position: value.duration);
+          value = value.copyCleaningError(
+              isPlaying: false, position: value.duration);
           _timer?.cancel();
           break;
         case VideoEventType.bufferingUpdate:
-          value = value.copyWith(buffered: event.buffered);
+          value = value.copyCleaningError(buffered: event.buffered);
           break;
         case VideoEventType.bufferingStart:
-          value = value.copyWith(isBuffering: true);
+          value = value.copyCleaningError(isBuffering: true);
           break;
         case VideoEventType.bufferingEnd:
-          value = value.copyWith(isBuffering: false);
+          value = value.copyCleaningError(isBuffering: false);
           break;
         case VideoEventType.unknown:
           break;
@@ -310,13 +339,12 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
       if (_closedCaptionFile == null) {
         _closedCaptionFile = await closedCaptionFile;
       }
-      value = value.copyWith(caption: _getCaptionAt(value.position));
+      value = value.copyCleaningError(caption: _getCaptionAt(value.position));
     }
 
     void errorListener(Object obj) {
       final PlatformException e = obj;
       value = VideoPlayerValue.erroneous(e.message);
-      notifyListeners();
       _timer?.cancel();
       if (!initializingCompleter.isCompleted) {
         initializingCompleter.completeError(obj);
@@ -351,7 +379,7 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
   /// has been sent to the platform, not when playback itself is totally
   /// finished.
   Future<void> play() async {
-    value = value.copyWith(isPlaying: true);
+    value = value.copyCleaningError(isPlaying: true);
     await _applyPlayPause();
   }
 
@@ -370,7 +398,7 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
 
   /// Pauses the video.
   Future<void> pause() async {
-    value = value.copyWith(isPlaying: false);
+    value = value.copyCleaningError(isPlaying: false);
     await _applyPlayPause();
   }
 
@@ -476,7 +504,7 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
   }
 
   void _updatePositionOnPlayback(Duration position) {
-    value = value.copyWith(
+    value = value.copyCleaningError(
         position: position, caption: _getCaptionAt(position), isPlaying: true);
   }
 }
