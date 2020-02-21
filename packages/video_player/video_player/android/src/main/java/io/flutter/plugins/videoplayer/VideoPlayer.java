@@ -193,6 +193,7 @@ final class VideoPlayer {
                         if (eventSink != null) {
                             eventSink.error("VideoError", "Video player had error " + error, null);
                         }
+                        exoPlayer.retry();
                     }
                 });
 
