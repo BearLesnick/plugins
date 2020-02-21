@@ -61,6 +61,8 @@ final class VideoPlayer {
 
     private boolean isInitialized = false;
 
+    private boolean isStoppedByError = false;
+
     VideoPlayer(
             Context context,
             EventChannel eventChannel,
@@ -193,7 +195,7 @@ final class VideoPlayer {
                         if (eventSink != null) {
                             eventSink.error("VideoError", "Video player had error " + error, null);
                         }
-                        exoPlayer.retry();
+                        isStoppedByError = true;
                     }
                 });
 
@@ -222,7 +224,11 @@ final class VideoPlayer {
     }
 
     void play() {
-        exoPlayer.setPlayWhenReady(true);
+        if (isStoppedByError) {
+            exoPlayer.retry();
+            exoPlayer.setPlayWhenReady(true);
+        }
+
     }
 
     void pause() {
