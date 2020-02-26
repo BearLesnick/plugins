@@ -226,9 +226,8 @@ final class VideoPlayer {
     void play() {
         if (isStoppedByError) {
             exoPlayer.retry();
-            exoPlayer.setPlayWhenReady(true);
         }
-
+        exoPlayer.setPlayWhenReady(true);
     }
 
     void pause() {
